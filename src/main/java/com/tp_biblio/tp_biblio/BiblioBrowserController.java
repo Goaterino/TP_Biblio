@@ -3,6 +3,7 @@ package com.tp_biblio.tp_biblio;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -28,6 +29,8 @@ public class BiblioBrowserController {
     private ListView<String> BooksListView;
     @FXML
     private GridPane BiblioGridPane;
+    @FXML
+    private CheckBox OnlyAvailableBooksCheckBox;
 
     @FXML
     public void initialize() {
@@ -43,7 +46,7 @@ public class BiblioBrowserController {
             } else {
                 title = "%" + title + "%";
             }
-            ResultSet rs = MySQLController.QueryAvailableBooks(title);
+            ResultSet rs = MySQLController.QueryAvailableBooks(title, OnlyAvailableBooksCheckBox.isSelected());
             if (rs!=null) {
                 displayed_books.clear();
                 while (rs.next()) {
