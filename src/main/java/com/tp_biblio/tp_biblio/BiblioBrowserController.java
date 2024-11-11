@@ -3,58 +3,107 @@ package com.tp_biblio.tp_biblio;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
-import javafx.scene.text.Text;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.sql.ResultSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import java.util.HashMap;
-import java.util.Map;
 
 
-public class BiblioBrowserController {
-    private final String book_regex = "id: \\s*(\\d+)";
-    private final Pattern book_pattern = Pattern.compile(book_regex);
-    private final ObservableList<String> displayed_books = FXCollections.observableArrayList();
-    private final Map<String, Text> BiblioGridMap = new HashMap<>();
+public class BiblioBrowserController extends BaseController {
+
+    private final ObservableList<Book> displayedBooks = FXCollections.observableArrayList();
+    private Book selectedBook = null;
 
     @FXML
     private TextField QueryField;
     @FXML
-    private ListView<String> BooksListView;
+    private TableView<Book> BooksTableView;
     @FXML
-    private GridPane BiblioGridPane;
+    private TableColumn<Book, Integer> idColumn;
+    @FXML
+    private TableColumn<Book, String> titleColumn;
+    @FXML
+    private TableColumn<Book, String> authorColumn;
+    @FXML
+    private TableColumn<Book, String> yearColumn;
+    @FXML
+    private TableColumn<Book, String> isbnColumn;
+    @FXML
+    private TableColumn<Book, String> availableColumn;
     @FXML
     private CheckBox OnlyAvailableBooksCheckBox;
+    @FXML
+    private Button BorrowButton;
 
     @FXML
     public void initialize() {
-        initializeBiblioGridPane();
+        super.initialize();
+        initializeBooksTableView();
     }
+
+    private void initializeBooksTableView() {
+        idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
+        titleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
+        authorColumn.setCellValueFactory(new PropertyValueFactory<>("authors"));
+        yearColumn.setCellValueFactory(new PropertyValueFactory<>("year"));
+        isbnColumn.setCellValueFactory(new PropertyValueFactory<>("isbn"));
+        availableColumn.setCellValueFactory(new PropertyValueFactory<>("available"));
+
+        BooksTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                onBookSelected(newValue);
+            }
+        });
+    }
+
+    private void onBookSelected(Book book) {
+        selectedBook = book;
+        BorrowButton.setDisable(!book.isAvailable());
+    }
+
 
     @FXML
     protected void onSearchButtonClick() {
         try {
-            String title = QueryField.getText();
-            if (title.isEmpty()) {
-                title = "%";
+            String title_or_isbn = QueryField.getText();
+            if (title_or_isbn.isEmpty()) {
+                title_or_isbn = "%";
             } else {
-                title = "%" + title + "%";
+                title_or_isbn = "%" + title_or_isbn + "%";
             }
-            ResultSet rs = MySQLController.QueryAvailableBooks(title, OnlyAvailableBooksCheckBox.isSelected());
-            if (rs!=null) {
-                displayed_books.clear();
+
+            ResultSet rs = MySQLController.QueryAvailableBooks(title_or_isbn);
+            if (rs != null) {
+                displayedBooks.clear();
                 while (rs.next()) {
-                    displayed_books.add(rs.getString("title") + " (id: " + rs.getInt("id") + ")");
+                    int bookId = rs.getInt("id");
+
+                    ResultSet authorsRs = MySQLController.QueryAuthorsByBookId(bookId);
+                    StringBuilder authorsBuilder = new StringBuilder();
+
+                    while (authorsRs.next()) {
+                        int authorId = authorsRs.getInt("author_id");
+                        ResultSet authorNameRs = MySQLController.QueryAuthorNameById(authorId);
+                        if (authorNameRs.next()) {
+                            authorsBuilder.append(authorNameRs.getString("name")).append(", ");
+                        }
+                    }
+
+                    String authors = !authorsBuilder.isEmpty() ? authorsBuilder.substring(0, authorsBuilder.length() - 2) : "";
+
+                    Book book = new Book(
+                            bookId,
+                            rs.getString("title"),
+                            authors,
+                            rs.getInt("year_of_parution"),
+                            rs.getString("editor"),
+                            rs.getString("isbn"),
+                            rs.getInt("total_quantity"),
+                            rs.getInt("already_borrowed_quantity")
+                    );
+                    displayedBooks.add(book);
                 }
-                BooksListView.setItems(displayed_books);
-                BooksListView.setPrefWidth(100);
-                BooksListView.setPrefHeight(100);
+                BooksTableView.setItems(displayedBooks);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -62,47 +111,9 @@ public class BiblioBrowserController {
     }
 
     @FXML
-    protected void onListedBookClick() {
-        try {
-            String selectedBook = BooksListView.getSelectionModel().getSelectedItem();
-            if (selectedBook != null) {
-                int selectedBookId = extractID(selectedBook);
-                ResultSet details_rs = MySQLController.QueryBookDetails(selectedBookId);
-                if (details_rs!=null) {
-                    while (details_rs.next()) {
-                        BiblioGridMap.get("title").setText(details_rs.getString("title"));
-                        BiblioGridMap.get("authors").setText(details_rs.getString("authors"));
-                        BiblioGridMap.get("editor").setText(details_rs.getString("editor"));
-                    }
-                }
-            }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+    protected void onBorrowButtonClick() {
+        if (selectedBook != null && selectedBook.isAvailable()) {
+            MainApplication.loadBookPopupWindow(selectedBook);
         }
-    }
-
-    private int extractID(String book_string) {
-        Matcher matcher = book_pattern.matcher(book_string);
-        if (matcher.find()) {
-            return Integer.parseInt(matcher.group(1));
-        }
-        return -1;
-    }
-
-    private void initializeBiblioGridPane() {
-
-        BiblioGridPane.add(new Text("Title"), 0, 0);
-        BiblioGridPane.add(new Text("Author(s)"), 0, 1);
-        BiblioGridPane.add(new Text("Editor"), 0, 2);
-
-        Text title = new Text("");
-        Text author = new Text("");
-        Text editor = new Text("");
-        BiblioGridPane.add(title, 1, 0);
-        BiblioGridPane.add(author, 1, 1);
-        BiblioGridPane.add(editor, 1, 2);
-        BiblioGridMap.put("title", title);
-        BiblioGridMap.put("authors", author);
-        BiblioGridMap.put("editor", editor);
     }
 }

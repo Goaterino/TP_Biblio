@@ -38,6 +38,7 @@ public class LoginController {
             if (rs!=null) {
                 rs.next();
                 MainApplication.logged_user_id = rs.getInt("id");
+                MainApplication.is_logged_user_admin = rs.getString("role").equals("admin");
                 System.out.println("Login Successful, logged as "+MainApplication.logged_user_id);
                 // code pour changer de scène avec le logged_user_id de changé...
                 MainApplication.SwitchScene("biblio-browser-view");

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="418.0" prefWidth="835.0" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.tp_biblio.tp_biblio.BorrowManagementController">
+    <children>
+        <ToolBar fx:id="ToolBar" prefHeight="25.0" prefWidth="835.0">
+        </ToolBar>
+        <!-- Search Field and Buttons at the top -->
+        <HBox layoutX="20.0" layoutY="122.0" spacing="10">
+            <TextField fx:id="QueryField" promptText="Search by User Name" />
+            <Button fx:id="SearchButton" onAction="#onSearchButtonClick" text="Search" />
+            <CheckBox fx:id="BaddieStatusCheckBox" text="Show only 'Baddies'" />
+            <Button fx:id="EditUserButton" disable="true" onAction="#onEditUserButtonClick" text="Edit User" />
+        </HBox>
+
+        <!-- Table View for Displaying Borrows -->
+        <TableView fx:id="BorrowsTableView" layoutX="20.0" layoutY="155.0" prefHeight="200.0" prefWidth="796.0">
+            <columns>
+                <TableColumn fx:id="userNameColumn" prefWidth="166.0" text="User Name" />
+                <TableColumn fx:id="bookTitleColumn" prefWidth="250" text="Book Title" />
+                <TableColumn fx:id="borrowDateColumn" prefWidth="193.0" text="Borrow Date" />
+                <TableColumn fx:id="dueDateColumn" prefWidth="186.0" text="Due Date" />
+            </columns>
+        </TableView>
+      <Label layoutX="185.0" layoutY="41.0" text="Borrow Management">
+         <font>
+            <Font size="50.0" />
+         </font>
+      </Label>
+    </children>
+</AnchorPane>

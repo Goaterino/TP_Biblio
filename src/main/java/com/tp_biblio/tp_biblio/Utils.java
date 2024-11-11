@@ -27,7 +27,7 @@ public class Utils {
         }
     }
 
-    /*public static void main(String[] args) {
-        System.out.println(hashString("very_weak_password"));
-    }*/
+    public static void main(String[] args) {
+        System.out.println(hashString("password2"));
+    }
 }
