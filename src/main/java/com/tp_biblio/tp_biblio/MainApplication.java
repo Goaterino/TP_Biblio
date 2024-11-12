@@ -46,6 +46,24 @@ public class MainApplication extends Application {
                     e.printStackTrace();
                 }
                 break;
+            case "user-management-view":
+                try {
+                    root = FXMLLoader.load(Objects.requireNonNull(MainApplication.class.getResource("user-management-view.fxml")));
+                    scene = new Scene(root, 835, 418);
+                    MainStage.setScene(scene);
+                } catch (javafx.fxml.LoadException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case "mybooks-management-view":
+                try {
+                    root = FXMLLoader.load(Objects.requireNonNull(MainApplication.class.getResource("mybooks-management-view.fxml")));
+                    scene = new Scene(root, 835, 418);
+                    MainStage.setScene(scene);
+                } catch (javafx.fxml.LoadException e) {
+                    e.printStackTrace();
+                }
+                break;
             default:
                 root = FXMLLoader.load(Objects.requireNonNull(MainApplication.class.getResource("login-view.fxml")));
                 scene = new Scene(root, 600, 400);
@@ -85,17 +103,17 @@ public class MainApplication extends Application {
         }
     }
 
-    public static void loadUserPopupWindow(User selectedUser) {
+    public static void loadUserPopupWindow(int selectedUserId) {
         try {
-            FXMLLoader loader = new FXMLLoader(MainApplication.class.getResource("confirm-borrow-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(MainApplication.class.getResource("edit-user-status-view.fxml"));
             Pane root = loader.load();
 
-            BorrowConfirmController controller = loader.getController();
-            //controller.setBookDetails(selectedUser);
+            EditUserStatusController controller = loader.getController();
+            controller.InitializeWithUserId(selectedUserId);
 
             PopupStage = new Stage();
             PopupStage.initModality(Modality.APPLICATION_MODAL);
-            PopupStage.setTitle("Confirm Borrow");
+            PopupStage.setTitle("Edit User Status");
 
             Scene scene = new Scene(root);
             PopupStage.setScene(scene);

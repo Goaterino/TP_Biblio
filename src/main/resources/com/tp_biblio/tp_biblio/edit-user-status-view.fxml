@@ -7,26 +7,21 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="300.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.tp_biblio.tp_biblio.EditUserStatusController">
-    <children>
-        <!-- Vertical box to align information and dropdown -->
-        <VBox layoutX="20.0" layoutY="20.0" spacing="15">
-            <!-- User information -->
-            <Label fx:id="userNameLabel" text="Name: " />
-            <Label fx:id="userEmailLabel" text="Email: " />
-            <Label fx:id="userOngoingBorrowsLabel" text="Ongoing Borrows: " />
-            <Label fx:id="userBaddieStatusLabel" text="Current Baddie Status: " />
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.tp_biblio.tp_biblio.EditUserStatusController" spacing="10" alignment="CENTER" style="-fx-padding: 20;">
+        <Label text="Name: "/>
+        <Label fx:id="userNameLabel" />
+        <Label text="Email: "/>
+        <Label fx:id="userEmailLabel" />
+        <Label text="Ongoing Borrows: "/>
+        <Label fx:id="userOngoingBorrowsLabel" />
+        <Label text="Current Baddie Status: "/>
+        <Label fx:id="userBaddieStatusLabel"/>
 
-            <!-- ComboBox for selecting new status -->
-            <ComboBox fx:id="statusComboBox" prefWidth="360.0">
-                <!-- Placeholder items (e.g., for different user statuses like "Normal", "Warning", "Baddie") -->
-            </ComboBox>
+        <ComboBox fx:id="statusComboBox">
+        </ComboBox>
 
-            <!-- Buttons at the bottom -->
-            <HBox alignment="CENTER" spacing="20" layoutY="250.0" prefWidth="360.0">
-                <Button fx:id="cancelButton" text="Cancel" onAction="#onCancelButtonClick" />
-                <Button fx:id="confirmButton" text="Confirm" onAction="#onConfirmButtonClick" />
-            </HBox>
-        </VBox>
-    </children>
-</AnchorPane>
+        <HBox alignment="CENTER" spacing="20" layoutY="250.0" prefWidth="360.0">
+            <Button fx:id="cancelButton" text="Cancel" onAction="#handleCancelAction" />
+            <Button fx:id="confirmButton" text="Confirm" onAction="#handleConfirmAction" />
+        </HBox>
+</VBox>

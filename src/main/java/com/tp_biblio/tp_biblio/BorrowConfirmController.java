@@ -26,9 +26,14 @@ public class BorrowConfirmController {
         String selectedDuration = borrowDurationComboBox.getValue();
         if (selectedDuration != null) {
             MySQLController.borrowBook(selectedDuration, book);
-            MySQLController.changeStockNumber(book.getId(), -1);
+            MySQLController.changeStockNumber(book.getId(), +1);
             showConfirmationAlert("Book borrowed for " + selectedDuration + " days.");
             MainApplication.PopupStage.close();
+            try {
+                MainApplication.SwitchScene("biblio-browser-view");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } else {
             showErrorAlert("Please select a borrow duration.");
         }

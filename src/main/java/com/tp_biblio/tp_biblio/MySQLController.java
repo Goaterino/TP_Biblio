@@ -1,5 +1,7 @@
 package com.tp_biblio.tp_biblio;
 
+import com.sun.tools.javac.Main;
+
 import java.sql.*;
 import java.time.LocalDate;
 
@@ -9,15 +11,20 @@ public class MySQLController {
     private static final String user = "root";
     private static final String pass = "root";
     // default query strings
-    private static final String get_all_books = "SELECT * FROM books WHERE title LIKE ? OR isbn LIKE ?";
-    private static final String get_book_details_from_id = "SELECT * FROM books WHERE id = ?";
+    private static final String get_all_books = "SELECT * FROM books WHERE (title LIKE ? OR isbn LIKE ?)";
     private static final String login_query = "SELECT id, role FROM users WHERE name = ? AND password = ? LIMIT 1";
-    private static final String get_user_info_query = "SELECT u.*, (SELECT COUNT(*) FROM borrows AS b WHERE b.user_id = ?) AS ongoing_borrows FROM users AS u WHERE u.id = ?";
+    private static final String get_user_info_query = "SELECT u.*, (SELECT COUNT(*) FROM borrowed_books AS b WHERE b.user_id = ?) AS ongoing_borrows FROM users AS u WHERE u.id = ?";
     private static final String get_authors_by_book_id = "SELECT author_id FROM books_to_authors WHERE book_id = ?";
     private static final String get_authors_by_author_id = "SELECT * FROM authors WHERE id = ?";
     private static final String add_borrowed_book = "INSERT INTO borrowed_books VALUES (?, ?, ?, ?)";
+    private static final String get_ongoing_borrows = "SELECT users.name AS user_name, users.id AS user_id, books.id AS book_id, books.title AS book_title, borrows.start_date, borrows.due_date FROM borrowed_books as borrows JOIN users ON borrows.user_id = users.id JOIN books ON borrows.book_id = books.id WHERE users.name LIKE ?";
+    private static final String get_all_user_info_query = "SELECT users.id AS user_id, users.name, users.email, COUNT(borrowed_books.book_id) AS ongoing_borrows, users.baddie_status FROM users LEFT JOIN borrowed_books ON borrowed_books.user_id = users.id WHERE users.name LIKE ?";
+    private static final String get_ongoing_borrows_by_user_id = "SELECT users.name AS user_name, users.id AS user_id, books.id AS book_id, books.title AS book_title, borrows.start_date, borrows.due_date FROM borrowed_books as borrows JOIN books ON borrows.book_id = books.id JOIN users ON borrows.user_id = users.id WHERE books.title LIKE ? AND borrows.user_id = ?";
+
+    // default update strings
+    private static final String change_user_status_by_id = "UPDATE users SET baddie_status = ? WHERE id = ?";
     private static final String change_stock = "UPDATE books SET already_borrowed_quantity = already_borrowed_quantity + ? WHERE id = ?";
-    private static final String get_ongoing_borrows = "SELECT users.name AS user_name, books.title AS book_title, borrows.start_date, borrows.due_date FROM borrowed_books as borrows JOIN users ON borrows.user_id = users.id JOIN books ON borrows.book_id = books.id WHERE users.name LIKE ?";
+    private static final String delete_borrowed_book = "DELETE FROM borrowed_books WHERE user_id = ? AND book_id = ? AND due_date = ?";
 
     private static Connection db_con;
 
@@ -36,11 +43,12 @@ public class MySQLController {
         return db_con != null;
     }
 
-    public static ResultSet QueryAvailableBooks(String title_or_isbn) {
+    public static ResultSet QueryAvailableBooks(String title_or_isbn, boolean onlyAvailableBooks) {
         assert isConnected();
         try {
+            String query = get_all_books + (onlyAvailableBooks ? " AND total_quantity > already_borrowed_quantity" : "");
             PreparedStatement ps;
-            ps = db_con.prepareStatement(get_all_books);
+            ps = db_con.prepareStatement(query);
             ps.setString(1, title_or_isbn);
             ps.setString(2, title_or_isbn);
             ResultSet rs = ps.executeQuery();
@@ -53,11 +61,13 @@ public class MySQLController {
         }
     }
 
-    public static ResultSet QueryBookDetails(Integer id) {
+    public static ResultSet QueryUserBorrows(String book_title, boolean onlyPastDue) {
         assert isConnected();
         try {
-            PreparedStatement ps = db_con.prepareStatement(get_book_details_from_id);
-            ps.setInt(1, id);
+            String query = get_ongoing_borrows_by_user_id + ((onlyPastDue) ? " AND borrows.due_date <= "+Date.valueOf(LocalDate.now()) : "");
+            PreparedStatement ps = db_con.prepareStatement(query);
+            ps.setString(1, book_title);
+            ps.setInt(2, MainApplication.logged_user_id);
             ResultSet rs = ps.executeQuery();
             System.out.println("Successfully queried the database :");
             System.out.println(ps);
@@ -92,6 +102,23 @@ public class MySQLController {
         try {
             PreparedStatement ps = db_con.prepareStatement(get_user_info_query);
             ps.setInt(1, id);
+            ps.setInt(2, id);
+            ResultSet rs = ps.executeQuery();
+            System.out.println("Successfully queried the database :");
+            System.out.println(ps);
+            return rs;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
+    }
+
+    public static ResultSet GetAllUserInfo(String userName, boolean onlyBaddies) {
+        assert isConnected();
+        String query = get_all_user_info_query + (onlyBaddies ? " AND users.baddie_status = 1" : "") + " GROUP BY users.id, users.name, users.email, users.baddie_status";
+        try {
+            PreparedStatement ps = db_con.prepareStatement(query);
+            ps.setString(1, userName);
             ResultSet rs = ps.executeQuery();
             System.out.println("Successfully queried the database :");
             System.out.println(ps);
@@ -159,7 +186,7 @@ public class MySQLController {
             ps.setInt(2, bookId);
             ps.setInt(1, delta);
             ps.executeUpdate();
-            System.out.println("Successfully queried the database :");
+            System.out.println("Successfully updated the database :");
             System.out.println(ps);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -175,6 +202,36 @@ public class MySQLController {
         } catch (SQLException e) {
             System.out.println("Error querying ongoing borrows: " + e.getMessage());
             return null;
+        }
+    }
+
+    public static void changeUserStatus(int user_id, boolean baddie) {
+        assert isConnected();
+        try {
+            PreparedStatement ps = db_con.prepareStatement(change_user_status_by_id);
+            ps.setBoolean(1, baddie);
+            ps.setInt(2, user_id);
+            ps.executeUpdate();
+            System.out.println("Successfully updated the database :");
+            System.out.println(ps);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public static void unBorrowBook(int book_id, int user_id, String due_date) {
+        assert isConnected();
+        try {
+            PreparedStatement ps = db_con.prepareStatement(delete_borrowed_book);
+            ps.setInt(1, user_id);
+            ps.setInt(2, book_id);
+            ps.setString(3, due_date);
+            ps.executeUpdate();
+            System.out.println("Successfully updated the database :");
+            System.out.println(ps);
+            changeStockNumber(book_id, -1);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
     }
 }

@@ -1,19 +1,14 @@
 package com.tp_biblio.tp_biblio;
 
-import com.sun.tools.javac.Main;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.Button;
 
 import java.sql.ResultSet;
 
-public class BorrowManagementController extends BaseController {
+public class MyBooksManagementController extends BaseController {
 
     private final ObservableList<Borrow> displayedBorrows = FXCollections.observableArrayList();
 
@@ -22,19 +17,15 @@ public class BorrowManagementController extends BaseController {
     @FXML
     private TableView<Borrow> BorrowsTableView;
     @FXML
-    private TableColumn<Borrow, Integer> borrowIdColumn;
-    @FXML
-    private TableColumn<Borrow, String> userNameColumn;
-    @FXML
     private TableColumn<Borrow, String> bookTitleColumn;
     @FXML
     private TableColumn<Borrow, String> borrowDateColumn;
     @FXML
     private TableColumn<Borrow, String> dueDateColumn;
     @FXML
-    private CheckBox BaddieStatusCheckBox;
+    private CheckBox PastDueCheckBox;
     @FXML
-    private Button EditUserButton;
+    private Button GiveBackButton;
 
     private Borrow selectedBorrow;
 
@@ -45,11 +36,9 @@ public class BorrowManagementController extends BaseController {
     }
 
     private void initializeBorrowsTableView() {
-        userNameColumn.setCellValueFactory(new PropertyValueFactory<>("userName"));
         bookTitleColumn.setCellValueFactory(new PropertyValueFactory<>("bookTitle"));
         borrowDateColumn.setCellValueFactory(new PropertyValueFactory<>("borrowDate"));
         dueDateColumn.setCellValueFactory(new PropertyValueFactory<>("dueDate"));
-
         BorrowsTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 onBorrowSelected(newValue);
@@ -59,32 +48,32 @@ public class BorrowManagementController extends BaseController {
     }
 
     private void onBorrowSelected(Borrow borrow) {
-        EditUserButton.setDisable(borrow == null);
+        GiveBackButton.setDisable(borrow == null);
         selectedBorrow = borrow;
     }
 
     @FXML
     protected void onSearchButtonClick() {
         try {
-            String userName = QueryField.getText();
-            if (userName.isEmpty()) {
-                userName = "%";
+            String searchQuery = QueryField.getText();
+            if (searchQuery.isEmpty()) {
+                searchQuery = "%";
             } else {
-                userName = "%" + userName + "%";
+                searchQuery = "%" + searchQuery + "%";
             }
 
-            boolean onlyBaddies = BaddieStatusCheckBox.isSelected();
-            ResultSet rs = MySQLController.QueryOngoingBorrows(userName, onlyBaddies);
+            boolean onlyPastDue = PastDueCheckBox.isSelected();
+            ResultSet rs = MySQLController.QueryUserBorrows(searchQuery, onlyPastDue);
             if (rs != null) {
                 displayedBorrows.clear();
                 while (rs.next()) {
                     Borrow borrow = new Borrow(
-                            rs.getString("user_name"),
-                            rs.getString("book_title"),
-                            rs.getString("start_date"),
-                            rs.getString("due_date"),
-                            rs.getInt("user_id"),
-                            rs.getInt("book_id")
+                        rs.getString("user_name"),
+                        rs.getString("book_title"),
+                        rs.getString("start_date"),
+                        rs.getString("due_date"),
+                        rs.getInt("user_id"),
+                        rs.getInt("book_id")
                     );
                     displayedBorrows.add(borrow);
                 }
@@ -96,9 +85,33 @@ public class BorrowManagementController extends BaseController {
     }
 
     @FXML
-    protected void onEditUserButtonClick() {
+    protected void onGiveBackButtonClick() {
         if (selectedBorrow != null) {
-            MainApplication.loadUserPopupWindow(selectedBorrow.getUserId());
+            try {
+                MySQLController.unBorrowBook(selectedBorrow.getBookId(), selectedBorrow.getUserId(), selectedBorrow.getDueDate());
+                showConfirmationAlert("Successfully gave back "+selectedBorrow.getBookTitle()+" !");
+                QueryField.setText("");
+                onSearchButtonClick();
+            } catch (Exception e) {
+                showErrorAlert(e.getMessage());
+            }
         }
+    }
+
+    private void showConfirmationAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Success");
+        alert.setHeaderText("Book Borrowed Successfully");
+        alert.setContentText(message);
+        alert.showAndWait();
+        System.out.println("test1");
+    }
+
+    private void showErrorAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText("Error in Borrowing Book");
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

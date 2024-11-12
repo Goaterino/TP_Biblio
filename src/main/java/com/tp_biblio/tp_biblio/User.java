@@ -19,5 +19,6 @@ public class User {
     public String getEmail() { return email; }
     public int getOngoingBorrows() { return ongoingBorrows; }
     public boolean isBaddie() { return baddie; }
+    public boolean getBaddieStatus() { return baddie; }
     public int getId() { return this.id; }
 }

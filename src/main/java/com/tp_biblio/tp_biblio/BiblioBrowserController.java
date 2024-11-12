@@ -7,6 +7,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 
 public class BiblioBrowserController extends BaseController {
@@ -54,13 +55,13 @@ public class BiblioBrowserController extends BaseController {
                 onBookSelected(newValue);
             }
         });
+        onSearchButtonClick();
     }
 
     private void onBookSelected(Book book) {
         selectedBook = book;
         BorrowButton.setDisable(!book.isAvailable());
     }
-
 
     @FXML
     protected void onSearchButtonClick() {
@@ -72,7 +73,8 @@ public class BiblioBrowserController extends BaseController {
                 title_or_isbn = "%" + title_or_isbn + "%";
             }
 
-            ResultSet rs = MySQLController.QueryAvailableBooks(title_or_isbn);
+            boolean onlyAvailableBooks = OnlyAvailableBooksCheckBox.isSelected();
+            ResultSet rs = MySQLController.QueryAvailableBooks(title_or_isbn, onlyAvailableBooks);
             if (rs != null) {
                 displayedBooks.clear();
                 while (rs.next()) {
@@ -111,9 +113,22 @@ public class BiblioBrowserController extends BaseController {
     }
 
     @FXML
-    protected void onBorrowButtonClick() {
+    protected void onBorrowButtonClick() throws SQLException {
         if (selectedBook != null && selectedBook.isAvailable()) {
-            MainApplication.loadBookPopupWindow(selectedBook);
+            ResultSet rs = MySQLController.GetUserInfo(MainApplication.logged_user_id); rs.next();
+            if (!rs.getBoolean("baddie_status")) {
+                MainApplication.loadBookPopupWindow(selectedBook);
+            } else {
+                showErrorAlert("Only non-baddies can borrow books. Please contact the administrator.");
+            }
         }
+    }
+
+    private void showErrorAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText("Error in Borrowing Book");
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

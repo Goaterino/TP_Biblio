@@ -5,21 +5,21 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<?import javafx.scene.control.ToolBar?>
 <AnchorPane prefHeight="418.0" prefWidth="835.0" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.tp_biblio.tp_biblio.BiblioBrowserController">
   <children>
-      <TableView fx:id="BooksTableView" layoutX="144.0" layoutY="189.0" prefHeight="200.0" prefWidth="549.0">
+      <TableView fx:id="BooksTableView" layoutX="62.0" layoutY="189.0" prefHeight="200.0" prefWidth="711.0">
         <columns>
           <TableColumn fx:id="idColumn" prefWidth="36.0" text="ID" />
-          <TableColumn fx:id="titleColumn" prefWidth="158.0" text="Title" />
-            <TableColumn fx:id="authorColumn" prefWidth="128.0" text="authors" />
-            <TableColumn fx:id="isbnColumn" minWidth="0.0" prefWidth="98.0" text="ISBN" />
-            <TableColumn fx:id="yearColumn" prefWidth="62.0" text="Year" />
-            <TableColumn fx:id="availableColumn" prefWidth="66.0" text="Available?" />
+          <TableColumn fx:id="titleColumn" prefWidth="220.0" text="Title" />
+            <TableColumn fx:id="authorColumn" prefWidth="231.0" text="authors" />
+            <TableColumn fx:id="isbnColumn" minWidth="0.0" prefWidth="102.0" text="ISBN" />
+            <TableColumn fx:id="yearColumn" prefWidth="47.0" text="Year" />
+            <TableColumn fx:id="availableColumn" prefWidth="74.0" text="Available?" />
         </columns>
       </TableView>
       <ToolBar fx:id="ToolBar" prefHeight="25.0" prefWidth="835.0">

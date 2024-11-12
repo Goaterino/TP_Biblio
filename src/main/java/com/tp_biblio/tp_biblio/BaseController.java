@@ -2,6 +2,7 @@ package com.tp_biblio.tp_biblio;
 
 import com.sun.tools.javac.Main;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.AnchorPane;
@@ -53,7 +54,11 @@ public abstract class BaseController {
     }
 
     protected void handleMyBooksButtonAction() {
-        System.out.println("Button 2 clicked in BaseController");
+        try {
+            MainApplication.SwitchScene("mybooks-management-view");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     protected void handleInspectBorrowsAction() {
@@ -65,7 +70,11 @@ public abstract class BaseController {
     }
 
     protected void handleInspectUsersAction() {
-        System.out.println("Button 4 clicked in BaseController");
+        try {
+            MainApplication.SwitchScene("user-management-view");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     protected void handleDisconnectAction() {
